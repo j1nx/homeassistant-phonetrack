@@ -1,0 +1,11 @@
+{
+  "domain": "phonetrack",
+  "name": "PhoneTrack",
+  "documentation": "https://github.com/j1nx/homeassistant-phonetrack",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@Phyks",
+    "@j1nx"
+  ]
+}
