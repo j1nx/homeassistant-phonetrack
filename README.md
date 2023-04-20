@@ -36,7 +36,7 @@ device_tracker:
   - platform: phonetrack
     url: https://<NEXTCLOUD_URL>/index.php/apps/phonetrack/api/getlastpositions/
     token: <SHARED_VIEW_TOKEN>
-    
+
     devices:
     - <DEVICE_NAME>
 ```
@@ -47,6 +47,6 @@ Please use [secrets](https://www.home-assistant.io/docs/configuration/secrets/) 
 Finish the optional GPS accuracy threshold value similar as Google LOcation Sharing.
 
 ## Troubleshooting
-I don't know how to code in Python (yet). This is just copy & paste work and using Google (a lot) debugging all error's I do not understand, while doing stuff I don't know. I have some more Python projects on the shelf, so whenever I start leaning that code a bit more, I will look into making it better.
+I don't know how to code in Python (yet). This is just copy & paste work and using Google (a lot) debugging all errors I do not understand, while doing stuff I don't know. I have some more Python projects on the shelf, so whenever I start leaning that code a bit more, I will look into making it better.
 
-Till then, feel free to fork and create PR's.
+Till then, feel free to fork and create PRs.
