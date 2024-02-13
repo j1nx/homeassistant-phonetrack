@@ -2,44 +2,73 @@
 import logging
 import urllib.parse
 from datetime import timedelta
+from typing import Any
 
-import requests
-import voluptuous as vol
-
-from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
-from homeassistant.const import (
-    CONF_DEVICES, CONF_TOKEN, CONF_URL)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import slugify, Throttle
+import homeassistant.helpers.config_validation as cv  # type: ignore[import]
+import requests  # type: ignore[import]
+import voluptuous as vol  # type: ignore[import]
+from homeassistant.components.device_tracker import (  # type: ignore[import]
+    PLATFORM_SCHEMA,
+    SOURCE_TYPE_GPS,
+    SeeCallback,
+)
+from homeassistant.const import CONF_DEVICES  # type: ignore[import]
+from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.core import HomeAssistant  # type: ignore[import]
+from homeassistant.helpers.event import track_time_interval  # type: ignore[import]
+from homeassistant.helpers.typing import ConfigType  # type: ignore[import]
+from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.util import Throttle, slugify  # type: ignore[import]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
 UPDATE_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [cv.string]),
-    vol.Required(CONF_TOKEN): cv.string,
-	vol.Required(CONF_URL): cv.string,
-    vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_TOKEN, default=""): cv.string,
+        vol.Required(CONF_URL, default=""): cv.string,
+        vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
+    }
+)
 
 
-def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
+def setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: SeeCallback,
+    _: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the PhoneTrack scanner."""
+    config_check = {
+        CONF_URL: "URL",
+        CONF_TOKEN: "Token",
+        CONF_DEVICES: "Device list",
+    }
+
+    for key, item in config_check.items():
+        if not config[key]:
+            _LOGGER.error("%s missing from configuration", item)
+            return False
+
     PhoneTrackDeviceTracker(hass, config, see)
     return True
 
 
-class PhoneTrackDeviceTracker(object):
+class PhoneTrackDeviceTracker:  # pylint: disable=too-few-public-methods
     """
     A device tracker fetching last position from the PhoneTrack Nextcloud
     app.
     """
-    def __init__(self, hass, config: ConfigType, see) -> None:
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        see: SeeCallback,
+    ) -> None:
         """Initialize the PhoneTrack tracking."""
         self.hass = hass
         self.url = config[CONF_URL]
@@ -49,27 +78,32 @@ class PhoneTrackDeviceTracker(object):
         self.see = see
         self._update_info()
 
-        track_time_interval(
-            hass, self._update_info, UPDATE_INTERVAL
-        )
+        track_time_interval(hass, self._update_info, UPDATE_INTERVAL)
 
-    @Throttle(UPDATE_INTERVAL)
-    def _update_info(self, now=None):
+    @Throttle(UPDATE_INTERVAL)  # type: ignore[misc]
+    def _update_info(self, *_: Any, **__: Any) -> bool:
         """Update the device info."""
-        _LOGGER.debug("Updating devices %s", now)
-        data = requests.get(urllib.parse.urljoin(self.url, self.token)).json()
+        _LOGGER.debug("Updating devices")
+        data = requests.get(
+            urllib.parse.urljoin(self.url, self.token),
+            timeout=30,
+        ).json()
         data = data[self.token]
         for device in self.devices:
             if device not in data.keys():
-                _LOGGER.info('Device %s is not available.', device)
+                _LOGGER.info("Device %s is not available.", device)
                 continue
-            lat, lon = data[device]['lat'], data[device]['lon']
-            accuracy = data[device]['accuracy']
-            battery = data[device]['batterylevel']
-            if self.max_gps_accuracy is not None and \
-                data[device]['accuracy'] > self.max_gps_accuracy:
-                _LOGGER.info("Ignoring %s update because expected GPS "
-                             "accuracy is not met", device)
+            lat, lon = data[device]["lat"], data[device]["lon"]
+            accuracy = data[device]["accuracy"]
+            battery = data[device]["batterylevel"]
+            if (
+                self.max_gps_accuracy is not None
+                and data[device]["accuracy"] > self.max_gps_accuracy
+            ):
+                _LOGGER.info(
+                    "Ignoring %s update because expected GPS accuracy is not met",
+                    device,
+                )
                 continue
 
             self.see(
@@ -77,6 +111,6 @@ class PhoneTrackDeviceTracker(object):
                 gps=(lat, lon),
                 source_type=SOURCE_TYPE_GPS,
                 gps_accuracy=accuracy,
-                battery=battery
+                battery=battery,
             )
         return True
