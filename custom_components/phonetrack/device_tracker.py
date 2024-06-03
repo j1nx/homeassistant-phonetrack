@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
 CONF_UPDATE_TIME_MINUTES = "update_time_minutes"
 CONF_UPDATE_TIME_SECONDS = "update_time_seconds"
-#UPDATE_INTERVAL = timedelta(minutes=config[CONF_UPDATE_TIME_MINUTES], seconds=config[CONF_UPDATE_TIME_SECONDS])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -93,9 +92,6 @@ class PhoneTrackDeviceTracker:  # pylint: disable=too-few-public-methods
         # Schedule the periodic update
         track_time_interval(hass, self._throttled_update_info, self.update_interval)
 
-#        track_time_interval(hass, self._update_info, UPDATE_INTERVAL)
-
-#    @Throttle(UPDATE_INTERVAL)  # type: ignore[misc]
     def _update_info(self, *_: Any, **__: Any) -> bool:
         """Update the device info."""
         _LOGGER.debug("Updating devices")
