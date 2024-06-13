@@ -9,7 +9,7 @@ import requests  # type: ignore[import]
 import voluptuous as vol  # type: ignore[import]
 from homeassistant.components.device_tracker import (  # type: ignore[import]
     PLATFORM_SCHEMA,
-    SOURCE_TYPE_GPS,
+    SOURCE_TYPE,
     SeeCallback,
 )
 from homeassistant.const import CONF_DEVICES  # type: ignore[import]
@@ -109,7 +109,7 @@ class PhoneTrackDeviceTracker:  # pylint: disable=too-few-public-methods
             self.see(
                 dev_id=slugify(device),
                 gps=(lat, lon),
-                source_type=SOURCE_TYPE_GPS,
+                source_type=GPS,
                 gps_accuracy=accuracy,
                 battery=battery,
             )
