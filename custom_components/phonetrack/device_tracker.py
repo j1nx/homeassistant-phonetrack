@@ -109,7 +109,7 @@ class PhoneTrackDeviceTracker:  # pylint: disable=too-few-public-methods
             self.see(
                 dev_id=slugify(device),
                 gps=(lat, lon),
-                source_type=GPS,
+                source_type=SourceType.GPS,
                 gps_accuracy=accuracy,
                 battery=battery,
             )
