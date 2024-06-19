@@ -37,8 +37,12 @@ device_tracker:
     url: https://<NEXTCLOUD_URL>/index.php/apps/phonetrack/api/getlastpositions/
     token: <SHARED_VIEW_TOKEN>
 
+    # Optional. Default is 5 minutes.
+    update_time_minutes: 0 
+    update_time_seconds: 30
+    
     devices:
-    - <DEVICE_NAME>
+      - <DEVICE_NAME>
 ```
 
 Please use [secrets](https://www.home-assistant.io/docs/configuration/secrets/) within Home-Assistant to store sensitive data like API Tokens.

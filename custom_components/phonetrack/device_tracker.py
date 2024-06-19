@@ -23,7 +23,8 @@ from homeassistant.util import Throttle, slugify  # type: ignore[import]
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
-UPDATE_INTERVAL = timedelta(minutes=5)
+CONF_UPDATE_TIME_MINUTES = "update_time_minutes"
+CONF_UPDATE_TIME_SECONDS = "update_time_seconds"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -31,9 +32,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TOKEN, default=""): cv.string,
         vol.Required(CONF_URL, default=""): cv.string,
         vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
+        vol.Optional(CONF_UPDATE_TIME_SECONDS, default=0): vol.Coerce(float),
+        vol.Optional(CONF_UPDATE_TIME_MINUTES, default=5): vol.Coerce(float),
     }
 )
-
 
 def setup_scanner(
     hass: HomeAssistant,
@@ -75,12 +77,21 @@ class PhoneTrackDeviceTracker:  # pylint: disable=too-few-public-methods
         self.token = config[CONF_TOKEN]
         self.devices = config[CONF_DEVICES]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
+        self.update_time_minutes = config[CONF_UPDATE_TIME_MINUTES]
+        self.update_time_seconds = config[CONF_UPDATE_TIME_SECONDS]
         self.see = see
         self._update_info()
 
-        track_time_interval(hass, self._update_info, UPDATE_INTERVAL)
+        self.update_interval = timedelta(minutes=self.update_time_minutes, seconds=self.update_time_seconds)
+        # Throttle the update method dynamically
+        self._throttled_update_info = Throttle(self.update_interval)(self._update_info)
 
-    @Throttle(UPDATE_INTERVAL)  # type: ignore[misc]
+        # Initial call to update information
+        self._update_info()
+
+        # Schedule the periodic update
+        track_time_interval(hass, self._throttled_update_info, self.update_interval)
+
     def _update_info(self, *_: Any, **__: Any) -> bool:
         """Update the device info."""
         _LOGGER.debug("Updating devices")
@@ -114,3 +125,4 @@ class PhoneTrackDeviceTracker:  # pylint: disable=too-few-public-methods
                 battery=battery,
             )
         return True
+
