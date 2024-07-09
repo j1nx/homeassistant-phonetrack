@@ -9,7 +9,7 @@ import requests  # type: ignore[import]
 import voluptuous as vol  # type: ignore[import]
 from homeassistant.components.device_tracker import (  # type: ignore[import]
     PLATFORM_SCHEMA,
-    SOURCE_TYPE,
+    SourceType,
     SeeCallback,
 )
 from homeassistant.const import CONF_DEVICES  # type: ignore[import]
