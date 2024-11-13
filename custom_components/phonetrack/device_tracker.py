@@ -83,14 +83,12 @@ class PhoneTrackDeviceTracker:  # pylint: disable=too-few-public-methods
         self._update_info()
 
         self.update_interval = timedelta(minutes=self.update_time_minutes, seconds=self.update_time_seconds)
-        # Throttle the update method dynamically
-        self._throttled_update_info = Throttle(self.update_interval)(self._update_info)
 
         # Initial call to update information
         self._update_info()
 
         # Schedule the periodic update
-        track_time_interval(hass, self._throttled_update_info, self.update_interval)
+        track_time_interval(hass, self._update_info, self.update_interval)
 
     def _update_info(self, *_: Any, **__: Any) -> bool:
         """Update the device info."""
